@@ -13,4 +13,4 @@ RUN pip3 install -U pip ruamel.yaml.clib
 COPY . .
 RUN meltano install
 
-CMD [ "python3", "app.py"]
+CMD [ "python3", "-u", "app.py"]

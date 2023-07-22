@@ -1,11 +1,13 @@
 from flask import Blueprint, jsonify
 import os
 
-meltano_ops = Blueprint('meltano_ops', __name__)
-
 base_url='/crossbi/v1/api/meltano'
+meltano_controller = Blueprint(
+    'meltano_ops', 
+    __name__, url_prefix=base_url
+  )
 
-@meltano_ops.route(base_url + '/run')
+@meltano_controller.route(base_url + '/run')
 def run_meltano():
   try:
     os.system('meltano run tap-spreadsheets-anywhere target-postgres')
