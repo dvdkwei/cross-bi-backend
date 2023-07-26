@@ -4,7 +4,7 @@ from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 from dataclasses import dataclass
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={'expire_on_commit': False})
 
 class Mixin(object):
   __abstract__ = True
@@ -25,20 +25,17 @@ class cb_user(db.Model, Mixin):
   forename: str = db.Column(db.String(100), nullable=False)
   surname: str = db.Column(db.String(100), nullable=False)
   company: str = db.Column(db.String(100))
-  password_id: int = db.Column(db.Integer, db.ForeignKey('password.id'))
-  
-  # relationship
-  # password = relationship('Password', uselist=False, backref='cb_user')
+  password_id: int = db.Column(db.Integer, db.ForeignKey('cb_password.id'))
   
   def __repr__(self):
     return dict(self)
   
 @dataclass
-class Password(db.Model, Mixin):
+class cb_password(db.Model, Mixin):
   
-  id: int = db.Column(db.Integer, primary_key=True)
+  id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
   current_value: str = db.Column(db.String(150), nullable=False)
-  created_at: str = db.Column(db.DateTime(timezone=True), default=func.now())
+  created: str = db.Column(db.DateTime(timezone=True), default=func.now())
   
   def __repr__(self):
     return f"<Password {self.id}>"
