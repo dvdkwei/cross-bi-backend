@@ -71,7 +71,7 @@ async def registerUser():
       
       newUser = user_service.add_user(user)
   except Exception as user_creation_err:
-    return FailResponse(status=404, message=str(user_creation_err)).get_json()
+    return FailResponse(status=409, message=str(user_creation_err)).get_json()
   
   return SuccessResponse(data=newUser).get_json()
 

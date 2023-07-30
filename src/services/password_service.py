@@ -8,6 +8,8 @@ class PasswordService():
       password = db.session.execute(select(cb_password).filter_by(id = pass_id)).one()
     except Exception as pass_not_found:
       raise pass_not_found
+    finally:
+      db.session.close()
 
     return password
   

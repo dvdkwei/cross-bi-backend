@@ -2,6 +2,7 @@ ALTER TABLE IF EXISTS cb_user_workspace DROP CONSTRAINT pk_cb_user_workspace;
 DROP TABLE IF EXISTS cb_user_workspace;
 DROP TABLE IF EXISTS cb_password CASCADE;
 ALTER TABLE IF EXISTS cb_user DROP CONSTRAINT fk_password;
+ALTER TABLE IF EXISTS cb_user DROP CONSTRAINT email;
 DROP TABLE IF EXISTS cb_user;
 DROP TABLE IF EXISTS cb_workspace;
 

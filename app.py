@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify, request, make_response, Response
 import os
 from src.auth import Auth
 from context import create_app
@@ -6,6 +6,11 @@ from context import create_app
 app = create_app()
 
 base_url = '/crossbi/v1/api'
+
+@app.before_request
+def handle_preflight():
+  if request.method.lower() == 'options':
+    return Response()
 
 @app.before_request
 def is_authenticated():
