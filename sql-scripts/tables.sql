@@ -1,3 +1,5 @@
+ALTER TABLE IF EXISTS cb_dashboard DROP CONSTRAINT fk_workspace;
+DROP TABLE IF EXISTS cb_dashboard;
 ALTER TABLE IF EXISTS cb_user_workspace DROP CONSTRAINT pk_cb_user_workspace;
 DROP TABLE IF EXISTS cb_user_workspace;
 DROP TABLE IF EXISTS cb_password CASCADE;
@@ -35,3 +37,13 @@ CREATE TABLE cb_user_workspace (
   CONSTRAINT pk_cb_user_workspace PRIMARY KEY (workspace_id, user_id)
 );
 
+CREATE TABLE cb_dashboard (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(150) NOT NULL,
+	updated_at DATE DEFAULT CURRENT_DATE,
+  workspace_id INTEGER,
+  CONSTRAINT fk_workspace 
+    FOREIGN KEY(workspace_id)
+      REFERENCES cb_workspace(id)
+      ON UPDATE CASCADE ON DELETE CASCADE
+);

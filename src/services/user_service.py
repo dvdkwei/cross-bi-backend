@@ -1,7 +1,9 @@
 from flask import jsonify
 from sqlalchemy import select, delete
-from src.models import db, cb_user, cb_password
+from src.models import cb_user, cb_password
+from flask_sqlalchemy import SQLAlchemy
 
+db = SQLAlchemy(session_options={'expire_on_commit': False})
 class UserNotFoundException(Exception):
   def __init__(self, *args: object, attr: any) -> None:
     super().__init__(*args)
@@ -23,6 +25,7 @@ class UserService:
     try:
       users = db.session.execute(select(cb_user).order_by(cb_user.id)).all()
     except Exception as db_err:
+      db.session.remove()
       raise db_err
     finally:
       db.session.close()
@@ -35,6 +38,7 @@ class UserService:
     except Exception:
       raise UserNotFoundException(attr = user_id)
     finally:
+      db.session.remove()
       db.session.close()
     
     return user
@@ -43,8 +47,9 @@ class UserService:
     try:
       user = db.session.execute(db.select(cb_user).filter_by(email = user_email)).one()
     except Exception:
-      raise UserNotFoundException(attr = user_email)
+      return None
     finally:
+      db.session.remove()
       db.session.close()
     
     return user
@@ -61,21 +66,26 @@ class UserService:
     except Exception as db_err:
       raise db_err
     finally:
+      db.session.remove()
       db.session.close()
       
     return newUser
   
   def delete_user(self, user_id):
     try:
-      affected_rows = db.session.execute(delete(cb_user).where(cb_user.id == user_id)).rowcount
+      affected_rows = db.session.execute(
+        delete(cb_user).where(cb_user.id == user_id)
+      ).rowcount
       
       if affected_rows == 0:
         raise UserNotFoundException(attr = user_id)
       
       db.session.commit()
     except Exception as db_err:
+      db.session.remove()
       raise db_err
     finally:
+      
       db.session.close()
     
     return user_id
@@ -93,9 +103,7 @@ class UserService:
       if value != password:
         raise AuthenticationException()
     except Exception as ex:
+      db.session.remove()
       raise ex
     finally:
       db.session.close()
-      
-      
-    

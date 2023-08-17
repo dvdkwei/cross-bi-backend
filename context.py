@@ -4,8 +4,10 @@ import logging
 import logging.handlers
 from os import environ
 from flask_cors import CORS
-from src.controllers.meltano_controller import meltano_controller
 from src.controllers.user_controller import user_controller
+from src.controllers.workspace_controller import workspace_controller
+from src.controllers.asset_controller import asset_controller
+from src.controllers.dashboard_controller import dashboard_controller
 
 handler = logging.handlers.SysLogHandler(address = '/dev/log')
 handler.setFormatter(logging.Formatter('flask [%(levelname)s] %(message)s'))
@@ -23,7 +25,9 @@ def create_app():
   app.config.from_object('config.Config')
   
   with app.app_context():
-    app.register_blueprint(meltano_controller)
     app.register_blueprint(user_controller)
+    app.register_blueprint(workspace_controller)
+    app.register_blueprint(asset_controller)
+    app.register_blueprint(dashboard_controller)
   
   return app

@@ -39,3 +39,32 @@ class cb_password(db.Model, Mixin):
   
   def __repr__(self):
     return f"<Password {self.id}>"
+  
+@dataclass
+class cb_workspace(db.Model, Mixin):
+  
+  id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+  name: str = db.Column(db.String(75))
+  
+  def __repr__(self):
+    return f"<Workspace {self.id}>"
+  
+@dataclass
+class cb_user_workspace(db.Model, Mixin):
+  
+  workspace_id: int = db.Column(db.Integer, db.ForeignKey('cb_workspace.id'), primary_key=True)
+  user_id: int = db.Column(db.Integer, db.ForeignKey('cb_user.id'), primary_key=True)
+  
+  def __repr__(self):
+    return f"<UserWorkspace {self.id}>"
+
+@dataclass
+class cb_dashboard(db.Model, Mixin):
+  
+  id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+  name: str = db.Column(db.String(150), nullable=False)
+  updated_at: str = db.Column(db.DateTime(timezone=True), default=func.now())
+  workspace_id: int = db.Column(db.Integer, db.ForeignKey('cb_workspace.id'))
+  
+  def __repr__(self):
+    return f"<Dashboard {self.id}>"

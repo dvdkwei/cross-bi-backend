@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from src.services.user_service import UserService
 from src.services.password_service import PasswordService
+from src.services.user_workspace_service import UserWorkspaceService
 from src.models import cb_user
 import json
 from src.responses import SuccessResponse, FailResponse
@@ -10,6 +11,7 @@ base_url='/crossbi/v1/api/user'
 user_controller = Blueprint('user_controller', __name__, url_prefix=base_url)
 user_service = UserService()
 password_service = PasswordService()
+user_workspace_service = UserWorkspaceService()
 
 @user_controller.route('/', methods=['GET'])
 def getAllUsers() -> json:
@@ -44,16 +46,21 @@ def login():
       
       if not password_service.is_password_valid(password_instance.cb_password.current_value, password):
         raise Exception
+      
+      user = resultToDict(user)
   except Exception as user_auth_err:
     return FailResponse(status=401, message=str(user_auth_err)).get_json()
   
-  return SuccessResponse().get_json()
+  return SuccessResponse(data=user).get_json()
   
 @user_controller.route('/', methods=['POST'])
 async def registerUser():
   try:
     if request.method == 'POST':
       req = request.get_json(force=True)
+      
+      if user_service.get_user_by_email(req['email']):
+        raise Exception
       
       pass_id = await password_service.add_password(req['password'])
       

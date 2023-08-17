@@ -1,12 +1,16 @@
 from src.models import db, cb_password
 from werkzeug.security import generate_password_hash,check_password_hash
 from sqlalchemy import select, delete
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy(session_options={'expire_on_commit': False})
 
 class PasswordService():
   def get_password(self, pass_id):
     try:
       password = db.session.execute(select(cb_password).filter_by(id = pass_id)).one()
     except Exception as pass_not_found:
+      db.session.remove()
       raise pass_not_found
     finally:
       db.session.close()
@@ -27,6 +31,7 @@ class PasswordService():
       
       db.session.commit()
     except Exception as create_pass_err:
+      db.session.remove()
       raise create_pass_err
     finally:
       db.session.close()
@@ -45,6 +50,7 @@ class PasswordService():
       
       db.session.commit()
     except Exception as delete_pass_err:
+      db.session.remove()
       raise delete_pass_err
     finally:
       db.session.close()
