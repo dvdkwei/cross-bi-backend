@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from src.services.workspace_service import WorkspaceService
 from src.services.dashboard_service import DashboardService
+from src.services.meltano_service import MeltanoService
 from src.models import cb_dashboard
 import json
 from src.responses import SuccessResponse, FailResponse
@@ -10,6 +11,7 @@ base_url='/crossbi/v1/api/dashboard'
 dashboard_controller = Blueprint('dashboard', __name__, url_prefix=base_url)
 workspace_service = WorkspaceService()
 dashboard_service = DashboardService()
+meltano_service = MeltanoService()
 
 @dashboard_controller.route('/', methods=['GET'])
 def getAllDashboards() -> json:
@@ -19,7 +21,7 @@ def getAllDashboards() -> json:
     if len(workspaces) > 0:
       workspaces = rowToDict(workspaces)
   except Exception as ex:
-    return FailResponse(str(ex)).get_json()
+    return FailResponse(message=str(ex)).get_json()
 
   return SuccessResponse(data=workspaces).get_json()
 
@@ -38,7 +40,7 @@ def getDashboardsByWorkspaceId() -> json:
     
     dashboards = rowToDict(dashboards)
   except Exception as ex:
-    return FailResponse(str(ex)).get_json()
+    return FailResponse(message=str(ex)).get_json()
 
   return SuccessResponse(data=dashboards).get_json()
 
@@ -49,6 +51,7 @@ def addDashboard():
       req = request.get_json(force=True)
       req_name = req['name']
       req_workspace_id = req['workspace_id']
+      
       new_dashboard = dashboard_service.add_dashboard(
         cb_dashboard(
           name=req_name, 
@@ -70,3 +73,4 @@ def deleteDashboard(id):
     return FailResponse(status=404, message=str(dashboard_delete_err)).get_json()
   
   return SuccessResponse(status=204, data={'id': deleted_dashboard_id}).get_json()
+

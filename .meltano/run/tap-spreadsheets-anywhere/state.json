@@ -1,0 +1,14 @@
+{
+  "transactions": {
+    "modified_since": "2023-08-18T19:10:54.251132+00:00"
+  },
+  "customers": {
+    "modified_since": "2023-08-19T13:25:29.939882+00:00"
+  },
+  "product_categories": {
+    "modified_since": "2023-08-25T05:35:25.745903+00:00"
+  },
+  "cities": {
+    "modified_since": "2023-08-25T06:32:06.540628+00:00"
+  }
+}

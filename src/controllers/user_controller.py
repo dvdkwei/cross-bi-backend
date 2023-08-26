@@ -29,7 +29,7 @@ def getUser(id):
     user = user_service.get_user_by_id(int(id))
     user = resultToDict(user)
   except Exception as ex:
-    return FailResponse(str(ex)).get_json()
+    return FailResponse(message=str(ex)).get_json()
   
   return SuccessResponse(data=user).get_json()
 

@@ -8,6 +8,7 @@ from src.controllers.user_controller import user_controller
 from src.controllers.workspace_controller import workspace_controller
 from src.controllers.asset_controller import asset_controller
 from src.controllers.dashboard_controller import dashboard_controller
+from src.controllers.view_controller import view_controller
 
 handler = logging.handlers.SysLogHandler(address = '/dev/log')
 handler.setFormatter(logging.Formatter('flask [%(levelname)s] %(message)s'))
@@ -29,5 +30,6 @@ def create_app():
     app.register_blueprint(workspace_controller)
     app.register_blueprint(asset_controller)
     app.register_blueprint(dashboard_controller)
+    app.register_blueprint(view_controller)
   
   return app
