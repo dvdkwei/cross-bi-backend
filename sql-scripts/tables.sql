@@ -15,7 +15,8 @@ CREATE TABLE cb_password (
 );
 
 CREATE TABLE cb_workspace (
-  id SERIAL PRIMARY KEY
+  id SERIAL PRIMARY KEY,
+  name VARCHAR
 );
 
 CREATE TABLE cb_user (
@@ -46,4 +47,32 @@ CREATE TABLE cb_dashboard (
     FOREIGN KEY(workspace_id)
       REFERENCES cb_workspace(id)
       ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE cb_view (
+	id SERIAL PRIMARY KEY,
+	name VARCHAR(200) NOT NULL,
+	updated_at DATE DEFAULT CURRENT_DATE,
+  dashboard_id INTEGER,
+  workspace_id INTEGER,
+  diagramm_type INTEGER,
+  x_axis VARCHAR,
+  y_axis VARCHAR,
+  CONSTRAINT fk_dashboard 
+    FOREIGN KEY(dashboard_id)
+      REFERENCES cb_dashboard(id)
+      ON UPDATE CASCADE ON DELETE CASCADE
+  CONSTRAINT fk_workspace
+    FOREIGN KEY(workspace_id)
+      REFERENCES cb_workspace(id)
+      ON UPDATE CASCADE ON DELETE CASCADEv
+  CONSTRAINT fk_dtype
+    FOREIGN KEY(diagramm_type)
+      REFERENCES cb_diagramm_type(id)
+      ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE TABLE cb_diagramm_type (
+  id INTEGER PRIMARY KEY,
+  name VARCHAR
 );

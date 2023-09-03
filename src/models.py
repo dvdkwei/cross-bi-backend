@@ -68,3 +68,28 @@ class cb_dashboard(db.Model, Mixin):
   
   def __repr__(self):
     return f"<Dashboard {self.id}>"
+  
+@dataclass
+class cb_view(db.Model, Mixin):
+  
+  id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+  name: str = db.Column(db.String(200), nullable=False)
+  updated_at: str = db.Column(db.DateTime(timezone=True), default=func.now())
+  dashboard_id: int = db.Column(db.Integer, db.ForeignKey('cb_dashboard.id'))
+  workspace_id: int = db.Column(db.Integer, db.ForeignKey('cb_workspace.id'))
+  diagramm_type: int = db.Column(db.Integer, db.ForeignKey('cb_diagramm_type.id'))
+  x_axis: str = db.Column(db.String)
+  y_axis: str = db.Column(db.String)
+  aggregate: str = db.Column(db.String)
+  
+  def __repr__(self):
+    return f"<View {self.id}>"
+  
+@dataclass
+class cb_diagramm_type(db.Model, Mixin):
+  
+  id: int = db.Column(db.Integer, primary_key=True)
+  name: str = db.Column(db.String(200), nullable=True)
+  
+  def __repr__(self):
+    return f"<Diagramm Type {self.id}>"

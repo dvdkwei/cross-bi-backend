@@ -19,7 +19,6 @@ best_contributors_origins as (
   select
     transactions_count.customer_id,
     transactions_count.transaction_frequency,
-    customer_cities.city_code,
     cities.city_name,
     cities.country_code
   from transactions_count

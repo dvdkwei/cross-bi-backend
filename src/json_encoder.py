@@ -27,3 +27,6 @@ def resultToDict(result):
   key = list(d.keys())[0]
   
   return d[key]
+
+def rawResultsToDict(results):
+  return [dict(zip(row.keys(), row)) for row in results]
