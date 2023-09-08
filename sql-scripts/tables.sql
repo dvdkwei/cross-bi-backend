@@ -58,6 +58,8 @@ CREATE TABLE cb_view (
   diagramm_type INTEGER,
   x_axis VARCHAR,
   y_axis VARCHAR,
+  aggregate VARCHAR(10),
+  categories VARCHAR,
   CONSTRAINT fk_dashboard 
     FOREIGN KEY(dashboard_id)
       REFERENCES cb_dashboard(id)

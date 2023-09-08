@@ -97,10 +97,14 @@ def postView() -> json:
       req = request.get_json(force=True)
       
       view = cb_view(
-        name= req['name'],
-        dashboard_id= req['dashboard_id'],
-        workspace_id= req['workspace_id'],
-        
+        name = req['name'],
+        dashboard_id = req['dashboard_id'],
+        workspace_id = req['workspace_id'],
+        x_axis = req['x_axis'],
+        y_axis = req['y_axis'],
+        aggregate = req['aggregate'],
+        categories = req['categories'],
+        title = req['title']
       )
       
       new_view = view_service.add_view(view)
@@ -138,7 +142,7 @@ def deleteView(id) -> json:
 @view_controller.route('/inspect/<id>', methods=['GET'])
 def inspectView(id: str):
   try:
-    should_categorize = request.args.get('categorize')
+    # should_categorize = request.args.get('categorize')
     view = view_service.get_view_by_id(id)
     view_details = view_service.inspect_view(id)
     
@@ -148,40 +152,48 @@ def inspectView(id: str):
     if len(view_details) > 0:
       view_details = rawResultsToDict(view_details)
       
-    if should_categorize == 'false':
-      data = list(
-        map(lambda col: {
-            'descriptionTitle': view.x_axis,
-            'descriptionValue': col[view.x_axis],
-            'valueTitle': view.y_axis,
-            'value': col[view.y_axis]
-          }, 
-          view_details
-        )
-      )
+    categories = view.categories
+    
+    if not categories:
+      data = {
+        "title": view.title,
+        "axisData": list(
+            map(lambda col: {
+                'xAxisTitle': view.x_axis,
+                'xAxisValue': col[view.x_axis],
+                'yAxisTitle': view.y_axis,
+                'yAxisValue': col[view.y_axis]
+              }, 
+              view_details
+            )
+          )
+        }
     else:
+      x_axis_values = list(map(lambda detail: detail[view.x_axis], view_details))
+      x_axis_values = sorted(set(x_axis_values), key=x_axis_values.index)
+      
       data = {
         'xAxisTitle': view.x_axis,
-        'xAxisValue': list(map(lambda detail: detail[view.x_axis], view_details))
+        'xAxisValue': x_axis_values
       }
       
       filtered_view_details = []
       
-      for detail in view_details:
-        detail.pop(view.x_axis)
-        to_be_appended = []
-        keys = detail.keys()
-        for key in keys:
-          try:
-            to_be_appended.append({
-              'yAxisTitle': key,
-              'yAxisValue': float(detail[key])
-            })
-          except Exception as ex:
-            continue
-        filtered_view_details.append(to_be_appended)
-      
+      for value in x_axis_values:
+        filtered = filter(lambda x: x[view.x_axis] == value, view_details)
+        obj = []
+        for element in filtered:
+          obj.append({
+            'yAxisTitle': element[view.categories],
+            'yAxisValue': element[view.y_axis]
+          })
+        filtered_view_details.append(obj)
+        
       data.update({'yAxisData': filtered_view_details})
+    
+      categories = rowToDict(view_service.get_categories(view.name, categories))
+      data.update({'categories': categories})
+      data.update({'title': view.title})
       
   except Exception as ex:
     return FailResponse(message=str(ex)).get_json()
@@ -226,7 +238,6 @@ def aggregateView(id):
         'value': value
       }
   except Exception as ex:
-    # return FailResponse(message=str(ex)).get_json()
-    raise ex
+    return FailResponse(message=str(ex)).get_json()
   
   return SuccessResponse(data=data).get_json()

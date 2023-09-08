@@ -155,7 +155,9 @@ class ViewService():
             diagramm_type= view_obj['diagramm_type'],
             x_axis = view_obj['x_axis'],
             y_axis = view_obj['y_axis'],
-            aggregate = view_obj['aggregate']
+            aggregate = view_obj['aggregate'],
+            categories = view_obj['categories'],
+            title = view_obj['title']
           )
       )
       
@@ -169,3 +171,16 @@ class ViewService():
       db.session.close()
       
     return row
+  
+  def get_categories(self, view_name: str, column_name: str):
+    try:      
+      categories = db.session.execute(
+        'select distinct ' + column_name + ' from ' + view_name
+      ).all()
+    except Exception as db_err:
+      db.session.remove()
+      raise db_err
+    finally:
+      db.session.close()
+      
+    return categories

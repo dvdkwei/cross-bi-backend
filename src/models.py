@@ -81,6 +81,8 @@ class cb_view(db.Model, Mixin):
   x_axis: str = db.Column(db.String)
   y_axis: str = db.Column(db.String)
   aggregate: str = db.Column(db.String)
+  categories: str = db.Column(db.String)
+  title: str = db.Column(db.String(50))
   
   def __repr__(self):
     return f"<View {self.id}>"

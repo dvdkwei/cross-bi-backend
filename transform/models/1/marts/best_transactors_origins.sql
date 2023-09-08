@@ -8,7 +8,8 @@ with transactions_count as (
 ),
 
 customer_cities as (
-  select customer_id, city_code from {{ref("stg_1__customers")}}
+  select customer_id, city_code 
+  from {{ref("stg_1__customers")}}
 ),
 
 cities as (
