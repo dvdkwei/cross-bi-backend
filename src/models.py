@@ -83,6 +83,7 @@ class cb_view(db.Model, Mixin):
   aggregate: str = db.Column(db.String)
   categories: str = db.Column(db.String)
   title: str = db.Column(db.String(50))
+  date_column: str = db.Column(db.String(50))
   
   def __repr__(self):
     return f"<View {self.id}>"
@@ -95,3 +96,16 @@ class cb_diagramm_type(db.Model, Mixin):
   
   def __repr__(self):
     return f"<Diagramm Type {self.id}>"
+  
+@dataclass
+class cb_incident(db.Model, Mixin):
+  
+  id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+  title: str = db.Column(db.String(100), nullable=False)
+  timestamp: str = db.Column(db.DateTime(timezone=True), default=func.now())
+  description: str = db.Column(db.String)
+  department: str = db.Column(db.String(50), nullable=False)
+  status: int = db.Column(db.Integer, nullable=False, default=0)
+  
+  def __repr__(self):
+    return f"<Incident {self.id}>"

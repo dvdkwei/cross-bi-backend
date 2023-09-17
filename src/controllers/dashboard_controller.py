@@ -16,14 +16,14 @@ meltano_service = MeltanoService()
 @dashboard_controller.route('/', methods=['GET'])
 def getAllDashboards() -> json:
   try:
-    workspaces = dashboard_service.get_dashboards()
+    dashboards = dashboard_service.get_dashboards()
     
-    if len(workspaces) > 0:
-      workspaces = rowToDict(workspaces)
+    if len(dashboards) > 0:
+      dashboards = rowToDict(dashboards)
   except Exception as ex:
     return FailResponse(message=str(ex)).get_json()
 
-  return SuccessResponse(data=workspaces).get_json()
+  return SuccessResponse(data=dashboards).get_json()
 
 @dashboard_controller.route('/filter', methods=['GET'])
 def getDashboardsByWorkspaceId() -> json:

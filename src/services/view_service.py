@@ -127,13 +127,26 @@ class ViewService():
     
     return view_id
   
-  def inspect_view(self, id: str):
+  def inspect_view(self, id: str, from_date: str = None, to_date: str = None):
     try:
-      view_name = self.get_view_by_id(id)._asdict()['cb_view'].name
+      view = self.get_view_by_id(id)._asdict()['cb_view']
+      view_name = view.name
+      view_date_column = view.date_column
       
-      rows = db.session.execute(
-        'select * from ' + view_name
-      ).all()
+      query_string = 'select * from {name}'.format(name = view_name)
+      
+      if view_date_column and from_date and to_date:
+        query_string += " where TO_DATE({date_column}::text, \'YYYY-MM-DD\') " \
+        "between TO_DATE(\'{from_date}\', \'YYYY-MM-DD\') " \
+        "and TO_DATE(\'{to_date}\', \'YYYY-MM-DD\')"
+        
+        query_string = query_string.format(
+          date_column = view_date_column,
+          from_date = from_date,
+          to_date = to_date
+        )
+      
+      rows = db.session.execute(query_string).all()
     except Exception as db_err:
       db.session.remove()
       raise db_err
@@ -163,14 +176,14 @@ class ViewService():
       
       db.session.commit()
       
-      row = self.get_view_by_id(view_id)
+      updated_view = self.get_view_by_id(view_id)
     except Exception as db_err:
       db.session.remove()
       raise db_err
     finally:
       db.session.close()
       
-    return row
+    return updated_view
   
   def get_categories(self, view_name: str, column_name: str):
     try:      

@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, request
 from src.services.view_service import ViewService
 from src.models import cb_view
 import json
@@ -104,7 +104,9 @@ def postView() -> json:
         y_axis = req['y_axis'],
         aggregate = req['aggregate'],
         categories = req['categories'],
-        title = req['title']
+        title = req['title'],
+        updated_at = req['updated_at'],
+        date_column = req['date_column']
       )
       
       new_view = view_service.add_view(view)
@@ -142,9 +144,10 @@ def deleteView(id) -> json:
 @view_controller.route('/inspect/<id>', methods=['GET'])
 def inspectView(id: str):
   try:
-    # should_categorize = request.args.get('categorize')
+    from_date = request.args.get('from')
+    to_date = request.args.get('to')
     view = view_service.get_view_by_id(id)
-    view_details = view_service.inspect_view(id)
+    view_details = view_service.inspect_view(id, from_date, to_date)
     
     if view:
       view = resultToDict(view)
@@ -203,11 +206,16 @@ def inspectView(id: str):
 @view_controller.route('/aggregate/<id>', methods=['GET'])
 def aggregateView(id):
   try:
+    from_date = request.args.get('from')
+    to_date = request.args.get('to')
     view = view_service.get_view_by_id(id)
-    view_details = view_service.inspect_view(id)
+    view_details = view_service.inspect_view(id, from_date, to_date)
     
-    if not view or len(view_details) == 0:
-      raise Exception('Data not sufficient for view with id=' + id)
+    if not view:
+      return FailResponse(message=str(ex), status=404).get_json()
+    
+    if len(view_details) == 0:
+      return SuccessResponse(data=None).get_json()
       
     view = resultToDict(view)
     view_details = rawResultsToDict(view_details)
@@ -224,19 +232,29 @@ def aggregateView(id):
       value = reduce(lambda a,b: a+b, val_array)
     elif method == 'count':
       value = len(val_array)
-    else:
-      value = val_array
+    elif method == 'avg':
+      value = reduce(lambda a,b: a+b, val_array)/len(val_array)
+    elif method == 'max':
+      value = max(val_array)
+    elif method == 'min':
+      value = min(val_array)
     
     if method: 
       data = {
         'valueTitle': method + '_of_' + view.y_axis,
-        'value': value
+        'value': value,
+        'aggregate': method
       }
     else:
       data = {
         'valueTitle': view.y_axis,
         'value': value
       }
+      
+    data.update({
+      'x_axis': x_axis,
+      'y_axis': y_axis,
+    })
   except Exception as ex:
     return FailResponse(message=str(ex)).get_json()
   

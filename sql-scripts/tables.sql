@@ -60,6 +60,8 @@ CREATE TABLE cb_view (
   y_axis VARCHAR,
   aggregate VARCHAR(10),
   categories VARCHAR,
+  title VARCHAR(50),
+  date_column VARCHAR,
   CONSTRAINT fk_dashboard 
     FOREIGN KEY(dashboard_id)
       REFERENCES cb_dashboard(id)
@@ -77,4 +79,13 @@ CREATE TABLE cb_view (
 CREATE TABLE cb_diagramm_type (
   id INTEGER PRIMARY KEY,
   name VARCHAR
+);
+
+CREATE TABLE cb_incident (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(100),
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  description VARCHAR,
+  department VARCHAR(50),
+  status INTEGER DEFAULT 0
 );
