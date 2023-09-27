@@ -63,7 +63,7 @@ class cb_dashboard(db.Model, Mixin):
   
   id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
   name: str = db.Column(db.String(150), nullable=False)
-  updated_at: str = db.Column(db.DateTime(timezone=True), default=func.now())
+  updated_at: datetime = db.Column(db.DateTime(timezone=True), default=func.now())
   workspace_id: int = db.Column(db.Integer, db.ForeignKey('cb_workspace.id'))
   
   def __repr__(self):
@@ -74,7 +74,7 @@ class cb_view(db.Model, Mixin):
   
   id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
   name: str = db.Column(db.String(200), nullable=False)
-  updated_at: str = db.Column(db.DateTime(timezone=True), default=func.now())
+  updated_at: datetime = db.Column(db.DateTime(timezone=True), default=func.now())
   dashboard_id: int = db.Column(db.Integer, db.ForeignKey('cb_dashboard.id'))
   workspace_id: int = db.Column(db.Integer, db.ForeignKey('cb_workspace.id'))
   diagramm_type: int = db.Column(db.Integer, db.ForeignKey('cb_diagramm_type.id'))
@@ -102,7 +102,7 @@ class cb_incident(db.Model, Mixin):
   
   id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
   title: str = db.Column(db.String(100), nullable=False)
-  timestamp: str = db.Column(db.DateTime(timezone=True), default=func.now())
+  timestamp: datetime = db.Column(db.DateTime(timezone=True), default=func.now())
   description: str = db.Column(db.String)
   department: str = db.Column(db.String(50), nullable=False)
   status: int = db.Column(db.Integer, nullable=False, default=0)
