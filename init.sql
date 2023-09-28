@@ -1,3 +1,9 @@
+DROP TABLE IF EXISTS cb_incident;
+ALTER TABLE IF EXISTS cb_view DROP CONSTRAINT fk_dashboard;
+ALTER TABLE IF EXISTS cb_view DROP CONSTRAINT fk_workspace;
+ALTER TABLE IF EXISTS cb_view DROP CONSTRAINT fk_dtype;
+DROP TABLE IF EXISTS cb_view;
+DROP TABLE IF EXISTS cb_diagramm_type;
 ALTER TABLE IF EXISTS cb_dashboard DROP CONSTRAINT fk_workspace;
 DROP TABLE IF EXISTS cb_dashboard;
 ALTER TABLE IF EXISTS cb_user_workspace DROP CONSTRAINT pk_cb_user_workspace;
@@ -25,6 +31,7 @@ CREATE TABLE cb_user (
   forename VARCHAR(100) NOT NULL,
   surname VARCHAR(75) NOT NULL,
   company VARCHAR(50),
+  username VARCHAR(100),
   password_id INTEGER, 
   CONSTRAINT fk_password 
     FOREIGN KEY(password_id)
@@ -49,6 +56,11 @@ CREATE TABLE cb_dashboard (
       ON UPDATE CASCADE ON DELETE CASCADE
 );
 
+CREATE TABLE cb_diagramm_type (
+  id INTEGER PRIMARY KEY,
+  name VARCHAR
+);
+
 CREATE TABLE cb_view (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(200) NOT NULL,
@@ -65,20 +77,15 @@ CREATE TABLE cb_view (
   CONSTRAINT fk_dashboard 
     FOREIGN KEY(dashboard_id)
       REFERENCES cb_dashboard(id)
-      ON UPDATE CASCADE ON DELETE CASCADE
+      ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT fk_workspace
     FOREIGN KEY(workspace_id)
       REFERENCES cb_workspace(id)
-      ON UPDATE CASCADE ON DELETE CASCADEv
+      ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT fk_dtype
     FOREIGN KEY(diagramm_type)
       REFERENCES cb_diagramm_type(id)
       ON UPDATE CASCADE ON DELETE CASCADE
-);
-
-CREATE TABLE cb_diagramm_type (
-  id INTEGER PRIMARY KEY,
-  name VARCHAR
 );
 
 CREATE TABLE cb_incident (

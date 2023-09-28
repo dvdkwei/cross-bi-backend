@@ -21,7 +21,7 @@ class cb_user(db.Model, Mixin):
     
   id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
   email: str = db.Column(db.String(100), nullable=False)
-  username: str = db.Column(db.String(100), nullable=False)
+  username: str = db.Column(db.String(100))
   forename: str = db.Column(db.String(100), nullable=False)
   surname: str = db.Column(db.String(100), nullable=False)
   company: str = db.Column(db.String(100))
@@ -35,7 +35,7 @@ class cb_password(db.Model, Mixin):
   
   id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
   current_value: str = db.Column(db.String(150), nullable=False)
-  created: str = db.Column(db.DateTime(timezone=True), default=func.now())
+  created: datetime = db.Column(db.DateTime(timezone=True), default=func.now())
   
   def __repr__(self):
     return f"<Password {self.id}>"

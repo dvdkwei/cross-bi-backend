@@ -156,8 +156,7 @@ cython_debug/
 .vscode/
 
 # db
-.db/
-db/
+.db/postgres-data/*
 logfile
 
 # PyCharm

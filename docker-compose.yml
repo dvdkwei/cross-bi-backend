@@ -18,14 +18,16 @@ services:
 
   db:
     container_name: pg_container
-    image: postgres:latest
+    image: postgres:15-alpine
     restart: always
     volumes:
       - .db/postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
       POSTGRES_DB: test_db
+      PGDATA: /var/lib/postgresql/data
     ports: 
       - "5432:5432"
     networks:
@@ -46,3 +48,6 @@ services:
 networks:
   api:
     driver: bridge
+
+volumes:
+  data: {}

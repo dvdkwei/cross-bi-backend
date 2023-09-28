@@ -17,10 +17,12 @@ user_workspace_service = UserWorkspaceService()
 def getAllUsers() -> json:
   try:
     users = user_service.get_all_users()
+    
+    if len(users):
+      users = rowToDict(users)
   except Exception as ex:
-    return FailResponse(str(ex)).get_json()
-  
-  users = rowToDict(users)
+    return FailResponse(message=str(ex)).get_json()
+
   return SuccessResponse(data=users).get_json()
 
 @user_controller.route('/<id>', methods=['GET'])
