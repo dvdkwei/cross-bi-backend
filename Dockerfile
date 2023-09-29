@@ -1,4 +1,4 @@
-FROM python:3.9.6-buster
+FROM python:3.9.6
 
 WORKDIR /project
 
@@ -13,4 +13,4 @@ RUN pip3 install -U pip ruamel.yaml.clib
 COPY . .
 RUN meltano install
 
-CMD [ "python3", "-u", "app.py"]
+CMD [ "gunicorn", "-c", "./config/gunicorn.conf.py", "app:app"]
