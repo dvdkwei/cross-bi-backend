@@ -54,6 +54,15 @@ CREATE TABLE cb_diagramm_type (
   name VARCHAR
 );
 
+INSERT INTO cb_diagramm_type (id, name) 
+VALUES 
+  (1, 'Big Number'), 
+  (2, 'Bar'),
+  (3, 'Line'),
+  (4, 'Donut'),
+  (5, 'List'),
+  (6, 'Map')
+
 CREATE TABLE cb_view (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(200) NOT NULL,
