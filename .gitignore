@@ -140,5 +140,6 @@ cython_debug/
 .db/postgres-data/*
 logfile
 
-# nginx: the server currently has it's own nginx engine
-nginx/
+# docker
+docker-compose.dev.yml
+Dockerfile.dev

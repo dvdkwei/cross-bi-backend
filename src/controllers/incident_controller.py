@@ -10,13 +10,13 @@ incident_controller = Blueprint('incident', __name__, url_prefix=base_url)
 incident_service = IncidentService()
 
 @incident_controller.route('/', methods=['GET'])
-def getAllDashboards() -> json:
+def getAllIncidents() -> json:
   try:
-    workspaces = incident_service.get_incidents()
+    incidents = incident_service.get_incidents()
     
-    if len(workspaces) > 0:
-      workspaces = rowToDict(workspaces)
+    if len(incidents) > 0:
+      incidents = rowToDict(incidents)
   except Exception as ex:
     return FailResponse(message=str(ex)).get_json()
 
-  return SuccessResponse(data=workspaces).get_json()
+  return SuccessResponse(data=incidents).get_json()

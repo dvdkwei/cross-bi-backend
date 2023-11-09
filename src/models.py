@@ -109,3 +109,12 @@ class cb_incident(db.Model, Mixin):
   
   def __repr__(self):
     return f"<Incident {self.id}>"
+  
+@dataclass
+class cb_pushsubscription(db.Model, Mixin):
+  
+  id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+  subscription_json: str = db.Column(db.String, nullable=False)
+  
+  def __repr__(self):
+    return f"<PushSubscription {self.id}>"

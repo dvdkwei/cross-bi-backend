@@ -10,6 +10,7 @@ from src.controllers.asset_controller import asset_controller
 from src.controllers.dashboard_controller import dashboard_controller
 from src.controllers.view_controller import view_controller
 from src.controllers.incident_controller import incident_controller
+from src.controllers.pushsubscription_controller import pushsubscription_controller
 
 handler = logging.handlers.SysLogHandler(address = '/dev/log')
 handler.setFormatter(logging.Formatter('flask [%(levelname)s] %(message)s'))
@@ -33,5 +34,6 @@ def create_app():
     app.register_blueprint(dashboard_controller)
     app.register_blueprint(view_controller)
     app.register_blueprint(incident_controller)
+    app.register_blueprint(pushsubscription_controller)
   
   return app

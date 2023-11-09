@@ -19,7 +19,7 @@ def is_authenticated():
 
 @app.route(base_url + '/')
 def hello():
-  return {"Hello": os.environ.get('FLASK_ENV'), "ti": "titit"} 
+  return {"Hello": os.environ.get('FLASK_ENV')} 
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=3001, debug=True)

@@ -98,3 +98,8 @@ CREATE TABLE cb_incident (
   department VARCHAR(50),
   status INTEGER DEFAULT 0
 );
+
+CREATE TABLE cb_pushsubscription (
+  id SERIAL PRIMARY KEY,
+  subscription_json VARCHAR
+);
