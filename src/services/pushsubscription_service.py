@@ -12,7 +12,10 @@ class PushSubscriptionService():
     try:
       subs = db.session.execute(select(cb_pushsubscription)).all()
     except Exception as db_err:
+      db.session.remove()
       raise db_err
+    finally:
+      db.session.close()
     
     return subs
   
@@ -87,7 +90,6 @@ class PushSubscriptionService():
       db.session.remove()
       raise db_err
     finally:
-      
       db.session.close()
     
     return user_id
