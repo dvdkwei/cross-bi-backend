@@ -20,5 +20,8 @@ raw_env = [
   "DBT_POSTGRES_PASSWORD =" + environ.get('DBT_POSTGRES_PASSWORD'),
   "DBT_POSTGRES_PORT =" + environ.get('DBT_POSTGRES_PORT'),
   "DBT_POSTGRES_DBNAME =" + environ.get('DBT_POSTGRES_DBNAME'),
-  "DBT_POSTGRES_SCHEMA =" + environ.get('DBT_POSTGRES_SCHEMA')
+  "DBT_POSTGRES_SCHEMA =" + environ.get('DBT_POSTGRES_SCHEMA'),
+  "VAPID_PUBLIC_KEY =" + environ.get('VAPID_PUBLIC_KEY'),
+  "VAPID_PRIVATE_KEY =" + environ.get('VAPID_PRIVATE_KEY'),
+  "VAPID_MAILTO =" + environ.get('VAPID_MAILTO'),
 ]
