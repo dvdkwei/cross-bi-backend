@@ -22,29 +22,28 @@ class PushSubscriptionService():
   def get_subcription_by_json(self, sub_json):
     try:
       subscription = db.session.execute(select(cb_pushsubscription).filter_by(subscription_json = sub_json)).one()
-      
-    except Exception as subscription_not_found:
+    except Exception:
       db.session.remove()
-      raise subscription_not_found
+      return None
     finally:
       db.session.close()
-
+      
     return subscription
   
   def add_subscription(self, sub: cb_pushsubscription):
     try:
       is_sub_available = self.get_subcription_by_json(sub.subscription_json)
       
-      if is_sub_available:
-        raise Exception('User is a subscriber')
-      
-    except Exception:
-      db.session.add(sub)
-      db.session.flush()
-      
-      id = sub.id
-      
-      db.session.commit()
+      if not is_sub_available:
+        db.session.add(sub)
+        db.session.flush()
+        
+        id = sub.id
+        
+        db.session.commit()
+    except Exception as add_subscription_error:
+      db.session.remove()
+      raise add_subscription_error
     finally:
       db.session.close()
     

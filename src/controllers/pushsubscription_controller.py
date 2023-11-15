@@ -1,5 +1,4 @@
 from src.models import cb_pushsubscription
-from pywebpush import webpush, WebPushException
 from src.services.pushsubscription_service import PushSubscriptionService
 from flask import current_app, Blueprint, request, jsonify
 from src.responses import SuccessResponse, FailResponse
@@ -31,18 +30,16 @@ def notify():
 def addSubscription():
   if request.method == 'POST':
     try:
-      req = request.get_json()
+      req = request.get_json(force=True)
       sub_json = req['subscription_json']
       
       if not sub_json:
         raise Exception
       
-      sub_to_add = cb_pushsubscription(subscription_json = sub_json)
+      sub_to_add = cb_pushsubscription(subscription_json = json.dumps(sub_json))
       pushsubscription_service.add_subscription(sub_to_add)
     except Exception as notif_err:
-      # return FailResponse(message=req).get_json()
-      return str(notif_err)
-      # raise notif_err
+      return FailResponse(message=str(notif_err)).get_json()
       
   return SuccessResponse().get_json()
 
