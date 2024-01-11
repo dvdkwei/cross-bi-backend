@@ -3,18 +3,16 @@ import yaml
 import json
 import datetime
 from flask import current_app
-from src.responses import FailResponse, SuccessResponse
 
 class MeltanoService:
   async def run_extract_load():
     try:
       await os.system('meltano run tap-spreadsheets-anywhere target-postgres')
     except Exception as run_err:
-      return FailResponse(message=run_err.message).get_json()
-    
-    return SuccessResponse().get_json
-
-  async def update_extractor_tables(
+      raise run_err
+  
+  async def update_tables_config(
+    self,
     dashboard_id: str,
     new_file_path: str,
     table_name: str,
@@ -25,16 +23,16 @@ class MeltanoService:
     quote_char: str = "\""
   ):
     try:
-      meltano_yaml_path = os.path.join(
+      config_path = os.path.join(
         current_app.root_path,
-        'meltano.yml'
+        'config.json'
       )
       
-      meltano_file = open(meltano_yaml_path, 'w')
+      config_file = open(config_path, 'r')
       
-      meltano_json = json.loads(json.dumps(yaml.safe_load(meltano_file)))
-      tables: [object] = meltano_json['plugins']['extractors'][0]['config']['tables']    
-      new_table = json.dumps({
+      config_json = json.load(config_file)
+      tables: [object] = config_json['tables']
+      new_table = {
         "path": new_file_path,
         "name": dashboard_id + '_' + table_name,
         "pattern": new_file_name,
@@ -43,13 +41,17 @@ class MeltanoService:
         "format": file_format,
         "delimiter": delimiter,
         "quotechar": quote_char
-      })
+      }
       
       tables.append(new_table)
-      
-      yaml.dump(meltano_json, meltano_yaml_path)
-      meltano_file.close()
+      config_file.close()
     except Exception as update_err:
-      return FailResponse(message=update_err.message).get_json()
+      raise update_err
     
-    return SuccessResponse().get_json()
+    return tables
+  
+  async def transform():
+    try:
+      await os.system('meltano invoke dbt-postgres run')
+    except Exception as run_err:
+      raise run_err

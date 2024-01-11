@@ -1,8 +1,6 @@
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 from src.models import cb_workspace
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy(session_options={'expire_on_commit': False})
+from .abstract_repository import IRepository, db
 
 class WorkspaceNotFoundException(Exception):
   def __init__(self, *args: object, attr: any) -> None:
@@ -12,8 +10,8 @@ class WorkspaceNotFoundException(Exception):
   def __str__(self) -> str:
     return self.message
 
-class WorkspaceService:
-  def get_workspaces(self):
+class WorkspaceRepository(IRepository):
+  def get_all(self):
     try:
       workspaces = db.session.execute(select(cb_workspace).order_by(cb_workspace.id)).all()
     except Exception as db_err:
@@ -35,7 +33,7 @@ class WorkspaceService:
       
     return workspaces
   
-  def get_workspace_by_id(self, wsp_id):
+  def get_by_id(self, wsp_id):
     try:
       workspace = db.session.execute(db.select(cb_workspace).filter_by(id = wsp_id)).one()
     except Exception:
@@ -46,7 +44,7 @@ class WorkspaceService:
       
     return workspace
   
-  def add_workspace(self, new_wsp: cb_workspace):
+  def create(self, new_wsp: cb_workspace):
     newWorkspace = None
     try:
       db.session.add(new_wsp)
@@ -63,7 +61,27 @@ class WorkspaceService:
       
     return newWorkspace
   
-  def delete_workspace(self, worskpace_id):
+  def update(self, wsp_id: str, new_wsp: cb_workspace):
+    try:      
+      db.session.execute(
+        update(cb_workspace)
+          .where(cb_workspace.id == wsp_id)
+          .values(
+            name = new_wsp['name']
+          )
+      )
+      
+      db.session.commit()
+      
+    except Exception as db_err:
+      db.session.remove()
+      raise db_err
+    finally:
+      db.session.close()
+      
+    return new_wsp
+  
+  def delete(self, worskpace_id):
     try:
       affected_rows = db.session.execute(
         delete(cb_workspace)

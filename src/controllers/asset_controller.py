@@ -1,7 +1,4 @@
-from flask import Blueprint, jsonify, request
-from src.services.workspace_service import WorkspaceService
-from src.services.user_workspace_service import UserWorkspaceService
-from src.models import cb_workspace
+from flask import Blueprint, request
 import json, os
 from src.responses import SuccessResponse, FailResponse
 from src.json_encoder import rowToDict, resultToDict
@@ -9,8 +6,8 @@ from werkzeug.utils import secure_filename
 from flask import current_app
 
 asset_path = 'src/assets'
-base_url='/crossbi/v1/api/asset'
-asset_controller = Blueprint('asset', __name__, url_prefix=base_url)
+base_url='/crossbi/v1/api/assets'
+asset_controller = Blueprint('assets', __name__, url_prefix=base_url)
 
 @asset_controller.route('/upload', methods=['POST'])
 def upload_asset():

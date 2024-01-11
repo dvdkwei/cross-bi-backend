@@ -1,23 +1,40 @@
 from src.models import cb_pushsubscription
 from pywebpush import webpush, WebPushException
 from sqlalchemy import select, delete
-from flask_sqlalchemy import SQLAlchemy
 from flask import current_app
 import json
+from .abstract_repository import IRepository, db
 
-db = SQLAlchemy(session_options={'expire_on_commit': False})
+class PushSubscriptionNotFoundException(Exception):
+  def __init__(self, *args: object, attr: any) -> None:
+    super().__init__(*args)
+    self.message = 'user ' + str(attr) + ' not found'
+  
+  def __str__(self) -> str:
+    return self.message
 
-class PushSubscriptionService():
-  def get_all_subscriptions(self):
+class PushSubscriptionRepository(IRepository):
+  def get_all(self):
     try:
       subs = db.session.execute(select(cb_pushsubscription)).all()
-    except Exception as db_err:
+    except Exception:
       db.session.remove()
-      raise db_err
+      raise PushSubscriptionNotFoundException
     finally:
       db.session.close()
     
     return subs
+  
+  def get_by_id(self, pushsub_id:str):
+    try:
+      push_subscription = db.session.execute(select(cb_pushsubscription).filter_by(id = pushsub_id)).one()
+    except Exception:
+      db.session.remove()
+      raise PushSubscriptionNotFoundException
+    finally:
+      db.session.close()
+    
+    return push_subscription
   
   def get_subcription_by_json(self, sub_json):
     try:
@@ -30,7 +47,7 @@ class PushSubscriptionService():
       
     return subscription
   
-  def add_subscription(self, sub: cb_pushsubscription):
+  def create(self, sub: cb_pushsubscription):
     try:
       is_sub_available = self.get_subcription_by_json(sub.subscription_json)
       
@@ -41,13 +58,13 @@ class PushSubscriptionService():
         id = sub.id
         
         db.session.commit()
+        
+        return id
     except Exception as add_subscription_error:
       db.session.remove()
       raise add_subscription_error
     finally:
       db.session.close()
-    
-    return id
   
   def notify(self, sub: cb_pushsubscription, title, body):
     try: 
@@ -72,10 +89,13 @@ class PushSubscriptionService():
           raise ex
     
   def trigger_notification(self, title, body):
-    subscriptions = self.get_all_subscriptions()
+    subscriptions = self.get_all()
     return [self.notify(sub, title, body) for sub in subscriptions]
   
-  def delete_subscription(self, user_id):
+  def update(self, id, new_object):
+    raise Exception(message='No direct update on push subscription object')
+  
+  def delete(self, user_id):
     try:
       affected_rows = db.session.execute(
         delete(cb_pushsubscription).where(cb_pushsubscription.id == user_id)

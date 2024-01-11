@@ -1,22 +1,22 @@
 from flask import Blueprint, jsonify, request
-from src.services.workspace_service import WorkspaceService
-from src.services.dashboard_service import DashboardService
+from src.repositories.workspace_repository import WorkspaceRepository
+from src.repositories.dashboard_repository import DashboardRepository
 from src.services.meltano_service import MeltanoService
 from src.models import cb_dashboard
 import json
 from src.responses import SuccessResponse, FailResponse
 from src.json_encoder import rowToDict, resultToDict
 
-base_url='/crossbi/v1/api/dashboard'
-dashboard_controller = Blueprint('dashboard', __name__, url_prefix=base_url)
-workspace_service = WorkspaceService()
-dashboard_service = DashboardService()
+base_url='/crossbi/v1/api/dashboards'
+dashboard_controller = Blueprint('dashboards', __name__, url_prefix=base_url)
+workspace_repository = WorkspaceRepository()
+dashboard_repository = DashboardRepository()
 meltano_service = MeltanoService()
 
 @dashboard_controller.route('/', methods=['GET'])
 def getAllDashboards() -> json:
   try:
-    dashboards = dashboard_service.get_dashboards()
+    dashboards = dashboard_repository.get_dashboards()
     
     if len(dashboards) > 0:
       dashboards = rowToDict(dashboards)
@@ -33,7 +33,7 @@ def getDashboardsByWorkspaceId() -> json:
     if not workspace_id:
       return FailResponse('No parameters found').get_json()
     
-    dashboards = dashboard_service.filter_dashboards_by_workspace_id(workspace_id)
+    dashboards = dashboard_repository.filter_dashboards_by_workspace_id(workspace_id)
     
     if len(dashboards) == 0:
       return SuccessResponse(data=[]).get_json()
@@ -52,7 +52,7 @@ def addDashboard():
       req_name = req['name']
       req_workspace_id = req['workspace_id']
       
-      new_dashboard = dashboard_service.add_dashboard(
+      new_dashboard = dashboard_repository.add_dashboard(
         cb_dashboard(
           name=req_name, 
           workspace_id=req_workspace_id
@@ -68,9 +68,8 @@ def addDashboard():
 def deleteDashboard(id):
   try:
     if request.method == 'DELETE':
-      deleted_dashboard_id = dashboard_service.delete_dashboard(int(id))
+      deleted_dashboard_id = dashboard_repository.delete_dashboard(int(id))
   except Exception as dashboard_delete_err:
     return FailResponse(status=404, message=str(dashboard_delete_err)).get_json()
   
   return SuccessResponse(status=204, data={'id': deleted_dashboard_id}).get_json()
-

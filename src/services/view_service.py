@@ -1,199 +1,115 @@
-from flask_sqlalchemy import SQLAlchemy
-from flask import current_app
-from src.models import cb_view, cb_dashboard
-from sqlalchemy import select, delete, update
-import os, json
+from src.repositories.view_repository import ViewRepository
+from src.json_encoder import rowToDict, resultToDict, rawResultsToDict
+from functools import reduce
 
-db = SQLAlchemy(session_options={'expire_on_commit': False})
+view_repository = ViewRepository()
 
-class ViewNotFoundException(Exception):
-  def __init__(self, *args: object, attr: any) -> None:
-    super().__init__(*args)
-    self.message = 'user ' + str(attr) + ' not found'
-  
-  def __str__(self) -> str:
-    return self.message
-
-class ViewService():
-  def get_all_views(self):
-    try:
-      views = db.session.execute(
-        "SELECT table_name FROM INFORMATION_SCHEMA.views "
-        "WHERE table_schema = ANY (current_schemas(false)) "
-        "AND table_name not like 'stg_%' "
-        "AND table_name not like 'int_%'"
-      ).all()
-    except Exception as db_err:
-      db.session.remove()
-      raise db_err
-    finally:
-      db.session.close()
-    
-    return views
-  
-  def get_views_of_workspace(self, workspace_id: str, dashboard_id: str):
-    try:
-      # views_sqls = os.listdir(os.path.join(
-      #   current_app.root_path, 
-      #   'transform/models',
-      #   workspace_id,
-      #   'marts'
-      # ))
-      
-      # views_sqls = list(map(lambda x: x.removesuffix('.sql'), views_sqls))
-      
-      views = db.session.execute(
-        select(cb_view)
-          .filter(cb_view.workspace_id == workspace_id)
-          .filter(cb_view.dashboard_id == dashboard_id)
-      ).all()
-    except Exception as db_err:
-      db.session.remove()
-      raise db_err
-    finally:
-      db.session.close()
-    
-    return views
-  
-  def get_columns_of_a_view(self, view_name):
-    try:
-      columns = db.session.execute(
-        "SELECT attname AS columns "
-        "FROM pg_attribute " 
-        "WHERE  attrelid = '"+ view_name + 
-        "'::regclass "
-        "ORDER BY attnum"
-      ).all()
-    except Exception as file_err:
-      raise file_err
-    
-    return columns
-  
-  def get_view_by_id(self, id: int):
-    try:
-      view = db.session.execute(
-        select(cb_view).filter(cb_view.id == id)
-      ).one()
-    except Exception as db_err:
-      db.session.remove()
-      raise db_err
-    finally:
-      db.session.close()
-    
-    return view
-  
-  def get_view_by_name(self, view_name: str):
-    try:
-      view = db.session.execute(
-        select(cb_view).filter(cb_view.name == view_name)
-      ).one()
-    except Exception as db_err:
-      db.session.remove()
-      raise db_err
-    finally:
-      db.session.close()
-    
-    return view
-  
-  def add_view(self, view: cb_view):
-    try:
-      db.session.add(view)
-      db.session.flush()
-      new_view = cb_view
-      db.session.commit()
-    except Exception as db_err:
-      db.session.remove()
-      raise db_err
-    finally:
-      db.session.close()
-    
-    return new_view
-  
-  def delete_view(self, view_id: str):
-    try:
-      affected_rows = db.session.execute(
-        delete(cb_view).where(cb_view.id == view_id)
-      ).rowcount
-      
-      if affected_rows == 0:
-        raise ViewNotFoundException(attr = view_id)
-      
-      db.session.commit()
-    except Exception as db_err:
-      db.session.remove()
-      raise db_err
-    finally:
-      db.session.close()
-    
-    return view_id
-  
-  def inspect_view(self, id: str, from_date: str = None, to_date: str = None):
-    try:
-      view = self.get_view_by_id(id)._asdict()['cb_view']
-      view_name = view.name
-      view_date_column = view.date_column
-      
-      query_string = 'select * from {name}'.format(name = view_name)
-      
-      if view_date_column and from_date and to_date:
-        query_string += " where TO_DATE({date_column}::text, \'YYYY-MM-DD\') " \
-        "between TO_DATE(\'{from_date}\', \'YYYY-MM-DD\') " \
-        "and TO_DATE(\'{to_date}\', \'YYYY-MM-DD\')"
-        
-        query_string = query_string.format(
-          date_column = view_date_column,
-          from_date = from_date,
-          to_date = to_date
+class ViewService:
+  def get_uncategorised_data(self, view, view_details):
+    return {
+      "title": view.title,
+      "axisData": list(
+        map(lambda col: {
+            'xAxisTitle': view.x_axis,
+            'xAxisValue': col[view.x_axis],
+            'yAxisTitle': view.y_axis,
+            'yAxisValue': col[view.y_axis]
+          }, 
+          view_details
         )
-      
-      rows = db.session.execute(query_string).all()
-    except Exception as db_err:
-      db.session.remove()
-      raise db_err
-    finally:
-      db.session.close()
-    
-    return rows
-  
-  def update_view(self, view_id: str, view_obj: json):
-    try:      
-      db.session.execute(
-        update(cb_view)
-          .where(cb_view.id == view_id)
-          .values(
-            name = view_obj['name'],
-            updated_at = view_obj['updated_at'],
-            dashboard_id= view_obj['dashboard_id'],
-            workspace_id= view_obj['workspace_id'],
-            diagramm_type= view_obj['diagramm_type'],
-            x_axis = view_obj['x_axis'],
-            y_axis = view_obj['y_axis'],
-            aggregate = view_obj['aggregate'],
-            categories = view_obj['categories'],
-            title = view_obj['title']
-          )
       )
+    }
+    
+  def get_categorised_data(self, categories, view, view_details):
+    x_axis_values = list(map(lambda detail: detail[view.x_axis], view_details))
+    x_axis_values = sorted(set(x_axis_values), key=x_axis_values.index)
+    
+    data = {
+      'xAxisTitle': view.x_axis,
+      'xAxisValue': x_axis_values
+    }
+    
+    filtered_view_details = []
+    
+    for value in x_axis_values:
+      filtered = filter(lambda x: x[view.x_axis] == value, view_details)
+      obj = []
+      for element in filtered:
+        obj.append({
+          'yAxisTitle': element[view.categories],
+          'yAxisValue': element[view.y_axis]
+        })
+      filtered_view_details.append(obj)
       
-      db.session.commit()
-      
-      updated_view = self.get_view_by_id(view_id)
-    except Exception as db_err:
-      db.session.remove()
-      raise db_err
-    finally:
-      db.session.close()
-      
-    return updated_view
+    data.update({'yAxisData': filtered_view_details})
   
-  def get_categories(self, view_name: str, column_name: str):
-    try:      
-      categories = db.session.execute(
-        'select distinct ' + column_name + ' from ' + view_name
-      ).all()
-    except Exception as db_err:
-      db.session.remove()
-      raise db_err
-    finally:
-      db.session.close()
+    categories = rowToDict(view_repository.get_categories(view.name, categories))
+    data.update({'categories': categories})
+    data.update({'title': view.title})
+    
+    return data
+  
+  def inspect(self, id: str, from_date: str, to_date: str):
+    view = view_repository.get_by_id(id)
+    view_details = view_repository.inspect_view(id, from_date, to_date)
+    
+    if view:
+      view = resultToDict(view)
+    
+    if len(view_details) > 0:
+      view_details = rawResultsToDict(view_details)
       
-    return categories
+    categories = view.categories
+    
+    if not categories:
+      return self.get_uncategorised_data(view, view_details)
+    
+    return self.get_categorised_data(categories, view, view_details)
+    
+  def aggregate(self, view_id: str, from_date: str, to_date: str) -> dict:
+    view = view_repository.get_by_id(int(view_id))
+    view_details = view_repository.inspect_view(view_id, from_date, to_date)
+    
+    if len(view_details) == 0:
+      raise Exception('No view details to aggregate')
+      
+    view = resultToDict(view)
+    view_details = rawResultsToDict(view_details)
+    
+    method = view.aggregate
+    x_axis = view.x_axis
+    y_axis = view.y_axis
+    
+    if not x_axis or not y_axis:
+      raise Exception('False aggregate method for id=' + view_id)
+    
+    val_array = list(map(lambda elem: elem[y_axis], view_details))
+    if method == 'sum':
+      value = reduce(lambda a,b: a+b, val_array)
+    elif method == 'count':
+      value = len(val_array)
+    elif method == 'avg':
+      value = reduce(lambda a,b: a+b, val_array)/len(val_array)
+    elif method == 'max':
+      value = max(val_array)
+    elif method == 'min':
+      value = min(val_array)
+    
+    if method: 
+      data = {
+        'valueTitle': method + '_of_' + view.y_axis,
+        'value': value,
+        'aggregate': method
+      }
+    else:
+      data = {
+        'valueTitle': view.y_axis,
+        'value': value
+      }
+      
+    data.update({
+      'x_axis': x_axis,
+      'y_axis': y_axis,
+    })
+    
+    return data

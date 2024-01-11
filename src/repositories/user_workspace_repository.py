@@ -9,8 +9,8 @@ class UserWorkspaceNotFoundException(Exception):
     super().__init__(*args)
     self.message = 'User workspace relation with ' + str(attr) + ' not found'
 
-class UserWorkspaceService:
-  def get_all_user_workspaces():
+class UserWorkspaceRepository:
+  def get_all():
     try:
       user_workspaces = db.session.execute(select(cb_user_workspace)).all()
     except Exception as db_err:
@@ -21,7 +21,13 @@ class UserWorkspaceService:
       
     return user_workspaces
   
-  def get_user_workspace_by_user_id(self, uid: int):
+  def get_by_id(self, id):
+    raise Exception('No direct request of user_workspace by id allowed')
+
+  def update(self, id, new_object):
+    raise Exception('No direct request of user_workspace by id allowed')
+  
+  def get_by_user_id(self, uid: int):
     try:
       user_workspace = db.session.execute(
         db.select(cb_user_workspace)
@@ -35,7 +41,7 @@ class UserWorkspaceService:
     
     return user_workspace
   
-  def get_user_workspace_by_workspace_id(self, wid: int):
+  def get_by_workspace_id(self, wid: int):
     try:
       user_workspace = db.session.execute(
         db.select(cb_user_workspace)
@@ -49,7 +55,7 @@ class UserWorkspaceService:
     
     return user_workspace
   
-  def add_user_workspace(self, uid: int, wspid: int):
+  def create(self, uid: int, wspid: int):
     try:
       newUserWorkspace = cb_user_workspace(
         workspace_id=wspid, 
@@ -65,7 +71,7 @@ class UserWorkspaceService:
       
     return newUserWorkspace
   
-  def delete_user_workspace(self, user_workspace_id):
+  def delete(self, user_workspace_id):
     try:
       affected_rows = db.session.execute(
         delete(cb_user_workspace)

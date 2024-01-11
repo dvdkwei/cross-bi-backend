@@ -12,7 +12,7 @@ class DashboardNotFoundException(Exception):
   def __str__(self) -> str:
     return self.message
 
-class DashboardService:
+class DashboardRepository:
   def get_dashboards(self):
     try:
       dashboards = db.session.execute(

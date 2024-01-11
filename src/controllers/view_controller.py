@@ -1,4 +1,5 @@
 from flask import Blueprint, request
+from src.repositories.view_repository import ViewRepository
 from src.services.view_service import ViewService
 from src.models import cb_view
 import json
@@ -6,14 +7,15 @@ from src.responses import SuccessResponse, FailResponse
 from src.json_encoder import rowToDict, resultToDict, rawResultsToDict
 from functools import reduce
 
-base_url='/crossbi/v1/api/view'
-view_controller = Blueprint('view', __name__, url_prefix=base_url)
+base_url='/crossbi/v1/api/views'
+view_controller = Blueprint('views', __name__, url_prefix=base_url)
+view_repository = ViewRepository()
 view_service = ViewService()
 
 @view_controller.route('/', methods=['GET'])
 def getAllViewsFromDB() -> json:
   try:
-    views = view_service.get_all_views()
+    views = view_repository.get_all()
     
     if len(views) > 0:
       views = rowToDict(views)
@@ -30,7 +32,7 @@ def filterViews() -> json:
     view_name = request.args.get('view_name')
     
     if workspace_id and dashboard_id:
-      views = view_service.get_views_of_workspace(workspace_id, dashboard_id)
+      views = view_repository.get_views_of_workspace(workspace_id, dashboard_id)
       
       if len(views) > 0:
         views = rowToDict(views)
@@ -38,7 +40,7 @@ def filterViews() -> json:
         views = []
     
     if view_name:
-      views = view_service.get_view_by_name(view_name)
+      views = view_repository.get_view_by_name(view_name)
 
       if views:
         views = resultToDict(views)
@@ -51,7 +53,7 @@ def filterViews() -> json:
 @view_controller.route('/<id>', methods=['GET'])
 def getViewById(id) -> json:
   try:
-    view = view_service.get_view_by_id(id)
+    view = view_repository.get_by_id(id)
     
     if view:
       view = resultToDict(view)
@@ -64,7 +66,7 @@ def getViewById(id) -> json:
 def getColumnsOfAView() -> json:
   try:
     view_name = request.args.get('view_name')
-    columns = view_service.get_columns_of_a_view(view_name)
+    columns = view_repository.get_columns_of_a_view(view_name)
     
     if len(columns) > 0:
       columns = rowToDict(columns)
@@ -79,7 +81,7 @@ def getColumnsOfAView() -> json:
 def getViewByName() -> json:
   try:
     view_name = request.args.get('view_name')
-    view = view_service.get_view_by_name(view_name)
+    view = view_repository.get_view_by_name(view_name)
     
     if view:
       view = resultToDict(view)
@@ -109,7 +111,7 @@ def postView() -> json:
         date_column = req['date_column']
       )
       
-      new_view = view_service.add_view(view)
+      new_view = view_repository.create(view)
       new_view = resultToDict(new_view)
   except Exception as ex:
     return FailResponse(message=str(ex)).get_json()
@@ -122,7 +124,7 @@ def updateView(id) -> json:
     if request.method == 'PUT':
       req = request.get_json(force=True)
       
-      row = view_service.update_view(id, req)
+      row = view_repository.update(id, req)
       
       if row:
         row = resultToDict(row)
@@ -135,7 +137,7 @@ def updateView(id) -> json:
 def deleteView(id) -> json:
   try:
     if request.method == 'DELETE':
-      deleted_view_id = view_service.delete_view(id)
+      deleted_view_id = view_repository.delete(id)
   except Exception as ex:
     return FailResponse(message=str(ex)).get_json()
 
@@ -146,57 +148,7 @@ def inspectView(id: str):
   try:
     from_date = request.args.get('from')
     to_date = request.args.get('to')
-    view = view_service.get_view_by_id(id)
-    view_details = view_service.inspect_view(id, from_date, to_date)
-    
-    if view:
-      view = resultToDict(view)
-    
-    if len(view_details) > 0:
-      view_details = rawResultsToDict(view_details)
-      
-    categories = view.categories
-    
-    if not categories:
-      data = {
-        "title": view.title,
-        "axisData": list(
-            map(lambda col: {
-                'xAxisTitle': view.x_axis,
-                'xAxisValue': col[view.x_axis],
-                'yAxisTitle': view.y_axis,
-                'yAxisValue': col[view.y_axis]
-              }, 
-              view_details
-            )
-          )
-        }
-    else:
-      x_axis_values = list(map(lambda detail: detail[view.x_axis], view_details))
-      x_axis_values = sorted(set(x_axis_values), key=x_axis_values.index)
-      
-      data = {
-        'xAxisTitle': view.x_axis,
-        'xAxisValue': x_axis_values
-      }
-      
-      filtered_view_details = []
-      
-      for value in x_axis_values:
-        filtered = filter(lambda x: x[view.x_axis] == value, view_details)
-        obj = []
-        for element in filtered:
-          obj.append({
-            'yAxisTitle': element[view.categories],
-            'yAxisValue': element[view.y_axis]
-          })
-        filtered_view_details.append(obj)
-        
-      data.update({'yAxisData': filtered_view_details})
-    
-      categories = rowToDict(view_service.get_categories(view.name, categories))
-      data.update({'categories': categories})
-      data.update({'title': view.title})
+    data = view_service.inspect(id, from_date, to_date)
       
   except Exception as ex:
     return FailResponse(message=str(ex)).get_json()
@@ -208,53 +160,7 @@ def aggregateView(id):
   try:
     from_date = request.args.get('from')
     to_date = request.args.get('to')
-    view = view_service.get_view_by_id(id)
-    view_details = view_service.inspect_view(id, from_date, to_date)
-    
-    if not view:
-      return FailResponse(message=str(ex), status=404).get_json()
-    
-    if len(view_details) == 0:
-      return SuccessResponse(data=None).get_json()
-      
-    view = resultToDict(view)
-    view_details = rawResultsToDict(view_details)
-    
-    method = view.aggregate
-    x_axis = view.x_axis
-    y_axis = view.y_axis
-    
-    if not x_axis or not y_axis:
-      raise Exception('False aggregate method for id=' + id)
-    
-    val_array = list(map(lambda elem: elem[y_axis], view_details))
-    if method == 'sum':
-      value = reduce(lambda a,b: a+b, val_array)
-    elif method == 'count':
-      value = len(val_array)
-    elif method == 'avg':
-      value = reduce(lambda a,b: a+b, val_array)/len(val_array)
-    elif method == 'max':
-      value = max(val_array)
-    elif method == 'min':
-      value = min(val_array)
-    
-    if method: 
-      data = {
-        'valueTitle': method + '_of_' + view.y_axis,
-        'value': value,
-        'aggregate': method
-      }
-    else:
-      data = {
-        'valueTitle': view.y_axis,
-        'value': value
-      }
-      
-    data.update({
-      'x_axis': x_axis,
-      'y_axis': y_axis,
-    })
+    data = view_service.aggregate(id, from_date, to_date)
   except Exception as ex:
     return FailResponse(message=str(ex)).get_json()
   

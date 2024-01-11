@@ -1,22 +1,22 @@
 from flask import Blueprint, jsonify, request
-from src.services.user_service import UserService
-from src.services.password_service import PasswordService
-from src.services.user_workspace_service import UserWorkspaceService
+from src.repositories.user_repository import UserRepository
+from src.repositories.password_repository import PasswordRepository
+from src.repositories.user_workspace_repository import UserWorkspaceRepository
 from src.models import cb_user
 import json
 from src.responses import SuccessResponse, FailResponse
 from src.json_encoder import rowToDict, resultToDict
 
-base_url='/crossbi/v1/api/user'
+base_url='/crossbi/v1/api/users'
 user_controller = Blueprint('user_controller', __name__, url_prefix=base_url)
-user_service = UserService()
-password_service = PasswordService()
-user_workspace_service = UserWorkspaceService()
+user_repository = UserRepository()
+password_repository = PasswordRepository()
+user_workspace_repository = UserWorkspaceRepository()
 
 @user_controller.route('/', methods=['GET'])
 def getAllUsers() -> json:
   try:
-    users = user_service.get_all_users()
+    users = user_repository.get_all()
     
     if len(users):
       users = rowToDict(users)
@@ -28,7 +28,7 @@ def getAllUsers() -> json:
 @user_controller.route('/<id>', methods=['GET'])
 def getUser(id):
   try:
-    user = user_service.get_user_by_id(int(id))
+    user = user_repository.get_by_id(int(id))
     user = resultToDict(user)
   except Exception as ex:
     return FailResponse(message=str(ex)).get_json()
@@ -43,10 +43,10 @@ def login():
       email = req['email']
       password = req['password']
       
-      user = user_service.get_user_by_email(email)    
-      password_instance = password_service.get_password(user.cb_user.password_id)
+      user = user_repository.get_by_email(email)    
+      password_instance = password_repository.get_by_id(user.cb_user.password_id)
       
-      if not password_service.is_password_valid(password_instance.cb_password.current_value, password):
+      if not password_repository.is_password_valid(password_instance.cb_password.current_value, password):
         raise Exception
       
       user = resultToDict(user)
@@ -61,10 +61,10 @@ async def registerUser():
     if request.method == 'POST':
       req = request.get_json(force=True)
       
-      if user_service.get_user_by_email(req['email']):
+      if user_repository.get_by_email(req['email']):
         raise Exception
       
-      pass_id = await password_service.add_password(req['password'])
+      pass_id = await password_repository.create(req['password'])
       
       if not pass_id:
         raise Exception
@@ -78,7 +78,7 @@ async def registerUser():
         password_id = pass_id
       )
       
-      newUser = user_service.add_user(user)
+      newUser = user_repository.create(user)
   except Exception as user_creation_err:
     return FailResponse(status=409, message=str(user_creation_err)).get_json()
   
@@ -88,7 +88,7 @@ async def registerUser():
 def deleteUser(id):
   try:
     if request.method == 'DELETE':
-      deleted_user_id = user_service.delete_user(int(id))
+      deleted_user_id = user_repository.delete(int(id))
   except Exception as user_delete_err:
     return FailResponse(status=404, message=str(user_delete_err)).get_json()
   

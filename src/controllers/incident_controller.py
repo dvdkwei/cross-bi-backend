@@ -1,18 +1,17 @@
-from flask import Blueprint, jsonify, request
-from src.services.incident_service import IncidentService
-from src.models import cb_incident
+from flask import Blueprint
+from src.repositories.incident_repository import IncidentRepository
 import json
 from src.responses import SuccessResponse, FailResponse
 from src.json_encoder import rowToDict, resultToDict
 
-base_url='/crossbi/v1/api/incident'
-incident_controller = Blueprint('incident', __name__, url_prefix=base_url)
-incident_service = IncidentService()
+base_url='/crossbi/v1/api/incidents'
+incident_controller = Blueprint('incidents', __name__, url_prefix=base_url)
+incident_repository = IncidentRepository()
 
 @incident_controller.route('/', methods=['GET'])
 def getAllIncidents() -> json:
   try:
-    incidents = incident_service.get_incidents()
+    incidents = incident_repository.get_all()
     
     if len(incidents) > 0:
       incidents = rowToDict(incidents)
