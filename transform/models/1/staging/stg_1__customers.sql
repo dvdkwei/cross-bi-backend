@@ -1,4 +1,4 @@
-select
+SELECT
   customer_id,
   {{format_date('dob')}} as date_of_birth,
   CASE gender
@@ -8,7 +8,7 @@ select
   END gender_description,
   -- age demographics?
   city_code
-from
+FROM
   el_customers
-order by
+ORDER BY
   customer_id

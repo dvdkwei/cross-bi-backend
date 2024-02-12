@@ -2,79 +2,54 @@ default_environment: dev
 environments:
 - name: dev
 - name: staging
-  config:
-    plugins:
-      extractors:
-      - name: tap-spreadsheets-anywhere
-        variant: ets
-        pip_url: git+https://github.com/ets/tap-spreadsheets-anywhere.git
-        config:
-          tables: []
-      loaders:
-      - name: target-postgres
-        variant: meltanolabs
-        pip_url: git+https://github.com/MeltanoLabs/target-postgres.git
-        config:
-          database: postgres
-          default_target_schema: public
-          host: localhost
-          password: root
-          port: 5432
-          user: root
-      transformers:
-      - name: dbt
-        variant: dbt-labs
-        pip_url: dbt-core~=1.3.0 dbt-postgres~=1.3.0 dbt-redshift~=1.3.0 dbt-snowflake~=1.3.0
-          dbt-bigquery~=1.3.0
-      - name: dbt-postgres
-        variant: dbt-labs
-        pip_url: dbt-core~=1.3.0 dbt-postgres~=1.3.0
 - name: prod
 plugins:
   extractors:
   - name: tap-spreadsheets-anywhere
+    namespace: tap_spreadsheets_anywhere
     variant: ets
     pip_url: git+https://github.com/ets/tap-spreadsheets-anywhere.git
+    executable: tap-spreadsheets-anywhere
     config:
-      tables:
-      - delimiter: ','
-        format: csv
-        key_properties:
-        - transaction_id
-        - cust_id
-        name: el_transactions
-        path: file:///Users/davidweinardy/Desktop/BA/cross-bi/cross-bi-backend/src/assets/1/
-        pattern: Transactions.csv
-        quotechar: '"'
-        start_date: '2017-05-01T00:00:00Z'
-      - delimiter: ','
-        format: csv
-        key_properties:
-        - customer_id
-        name: el_customers
-        path: file:///Users/davidweinardy/Desktop/BA/cross-bi/cross-bi-backend/src/assets/1/
-        pattern: Customer.csv
-        quotechar: '"'
-        start_date: '2017-05-01T00:00:00Z'
-      - delimiter: ','
-        format: csv
-        key_properties:
-        - prod_cat_code
-        - prod_sub_cat_code
-        name: el_product_categories
-        path: file:///Users/davidweinardy/Desktop/BA/cross-bi/cross-bi-backend/src/assets/1/
-        pattern: prod_cat_info.csv
-        quotechar: '"'
-        start_date: '2017-05-01T00:00:00Z'
-      - delimiter: ','
-        format: csv
-        key_properties:
-        - city_code
-        name: el_cities
-        path: file:///Users/davidweinardy/Desktop/BA/cross-bi/cross-bi-backend/src/assets/1/
-        pattern: Cities.csv
-        quotechar: '"'
-        start_date: '2017-05-01T00:00:00Z'
+      tables: 
+        - delimiter: ','
+          format: csv
+          key_properties:
+          - transaction_id
+          - cust_id
+          name: el_transactions
+          path: file://assets/1/
+          pattern: Transactions.csv
+          quotechar: '"'
+          start_date: '2017-05-01T00:00:00Z'
+        - delimiter: ','
+          format: csv
+          key_properties:
+          - customer_id
+          name: el_customers
+          path: file://assets/1/
+          pattern: Customer.csv
+          quotechar: '"'
+          start_date: '2017-05-01T00:00:00Z'
+        - delimiter: ','
+          format: csv
+          key_properties:
+          - prod_cat_code
+          - prod_sub_cat_code
+          name: el_product_categories
+          path: file://assets/1/
+          pattern: prod_cat_info.csv
+          quotechar: '"'
+          start_date: '2017-05-01T00:00:00Z'
+        - delimiter: ','
+          format: csv
+          key_properties:
+          - city_code
+          name: el_cities
+          path: file://assets/1/
+          pattern: Cities.csv
+          quotechar: '"'
+          start_date: '2017-05-01T00:00:00Z'
   loaders:
   - name: target-postgres
     variant: meltanolabs
@@ -87,10 +62,6 @@ plugins:
       port: 5432
       user: root
   transformers:
-  - name: dbt
-    variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-postgres~=1.3.0 dbt-redshift~=1.3.0 dbt-snowflake~=1.3.0
-      dbt-bigquery~=1.3.0
   - name: dbt-postgres
     variant: dbt-labs
     pip_url: dbt-core~=1.3.0 dbt-postgres~=1.3.0

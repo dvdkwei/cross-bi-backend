@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, Blueprint, request
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import logging
 import logging.handlers
@@ -17,7 +17,7 @@ handler.setFormatter(logging.Formatter('flask [%(levelname)s] %(message)s'))
 
 app = Flask(__name__)
 CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
+app.config['CORS_HEADERS'] = 'Content-Type, Origin, Authorization'
 app.config["SQLALCHEMY_DATABASE_URI"] = environ.get('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)

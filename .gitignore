@@ -143,3 +143,6 @@ logfile
 # docker
 docker-compose.dev.yml
 Dockerfile.dev
+
+# misc
+*.jsonl
