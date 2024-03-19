@@ -67,15 +67,16 @@ class PushSubscriptionRepository(IRepository):
       db.session.close()
   
   def notify(self, sub: cb_pushsubscription, title, body):
+    private_key = current_app.config["VAPID_PRIVATE_KEY"]
+    mail_to = current_app.config["VAPID_MAILTO"]
+    
     try: 
       webpush(
           subscription_info=json.loads(sub['cb_pushsubscription'].subscription_json),
           data=json.dumps({"title": title, "body": body}),
-          vapid_private_key=current_app.config["VAPID_PRIVATE_KEY"],
+          vapid_private_key=private_key,
           vapid_claims={
-              "sub": "mailto:{}".format(
-                current_app.config["VAPID_MAILTO"]
-              )
+              "sub": "mailto:{}".format(mail_to)
           }
       )
     except WebPushException as ex:
