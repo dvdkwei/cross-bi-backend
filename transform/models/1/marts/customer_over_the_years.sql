@@ -5,7 +5,7 @@ with transactions as (
 customer_over_the_years as(
   select 
     extract(year from transaction_date) as transaction_year,
-    count(DISTINCT total_amount) as total_revenue
+    count(DISTINCT customer_id) as customers
   from 
     transactions
   group by 

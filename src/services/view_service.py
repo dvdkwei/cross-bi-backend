@@ -79,6 +79,7 @@ class ViewService:
     method = view.aggregate
     x_axis = view.x_axis
     y_axis = view.y_axis
+    title = view.title
     
     if not x_axis or not y_axis:
       raise Exception('False aggregate method for id=' + view_id)
@@ -94,16 +95,18 @@ class ViewService:
       value = max(val_array)
     elif method == 'min':
       value = min(val_array)
+    else:
+      value = val_array[0]
     
     if method: 
       data = {
-        'valueTitle': method + '_of_' + view.y_axis,
+        'valueTitle': title if title else method + '_of_' + view.y_axis,
         'value': value,
         'aggregate': method
       }
     else:
       data = {
-        'valueTitle': view.y_axis,
+        'valueTitle': title if title else view.y_axis,
         'value': value
       }
       
